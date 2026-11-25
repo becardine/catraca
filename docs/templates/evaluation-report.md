@@ -4,8 +4,9 @@
 
 - **Date**: <YYYY-MM-DD HH:MM (timezone)>
 - **Evaluated commit**: `<full SHA>` (branch `<branch>` or `main`)
-- **Tool**: <e.g. Claude Code 2.x — fresh subagent / separate session>
-- **Model**: <e.g. claude-opus-5-5>
+- **Implemented by**: <tool + model from the implementation commits' Agent-Tool/Agent-Model trailers>
+- **Tool (evaluator)**: <e.g. Codex — ChatGPT app, local mode / Claude Code — fresh session>
+- **Model (evaluator)**: <exact model shown by the tool>
 - **Evaluator independence**: <how context was isolated from the implementer>
 - **Contract**: `docs/features/<ID>-<slug>/contract.md` at the evaluated commit
 - **Previous report**: <path or "none">

@@ -66,6 +66,21 @@ A seed roda a cada subida e é idempotente.
   teste automatizado de rajada nos gates)*.
 - **Resposta assíncrona do gateway:** *(a documentar; plano: job persistido no banco com horário de
   resposta, processado por um worker; a aplicação do resultado só altera ingresso ainda `pending`)*.
-- **Isolamento da avaliação:** *(a documentar; plano: cada avaliação roda num subagente ou sessão nova,
-  com contexto vazio, que recebe só o `AGENTS.md`, o contrato e o commit, e grava um relatório novo e
-  imutável)*.
+- **Isolamento da avaliação:** cada avaliação roda numa sessão nova, com contexto vazio, que recebe só o
+  `AGENTS.md`, o contrato e o commit, e grava um relatório novo e imutável. Sempre que possível, quem
+  avalia é a outra ferramenta: o Codex avalia o que o Claude Code implementou e vice-versa.
+
+### Quem fez o quê
+
+Usamos duas ferramentas: Claude Code e Codex (app do ChatGPT, modo local). Cada commit de agente traz os
+trailers `Agent-Tool`, `Agent-Model` e `Agent-Role`, e cada relatório registra quem implementou e quem
+avaliou. Para listar os commits por ferramenta:
+
+```sh
+git log --format='%h %s | %(trailers:key=Agent-Tool,valueonly,separator=%x2C)'
+```
+
+| Feature | Implementado por | Avaliado por | Relatório mais recente |
+|---|---|---|---|
+| Harness | Claude Code (claude-opus-5-5) | — | — |
+| *(features do PRD, a preencher)* | | | |

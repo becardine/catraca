@@ -2,10 +2,23 @@
   "project": "catraca",
   "updatedAt": "2026-11-25",
   "statusValues": ["planned", "specified", "in_progress", "in_evaluation", "needs_fix", "done"],
+  "featureFormat": {
+    "id": "F03",
+    "name": "<feature name>",
+    "wave": 0,
+    "status": "planned",
+    "dir": "docs/features/<ID>-<slug>",
+    "branch": "feat/<ID>-<slug>",
+    "pr": null,
+    "implementedBy": null,
+    "evaluatedBy": null,
+    "latestReport": null
+  },
   "harness": {
     "status": "done",
+    "implementedBy": "claude-code (claude-opus-5-5)",
     "commands": { "up": "npm run up", "down": "npm run down", "gates": "npm run gates" }
   },
-  "prd": { "status": "planned", "path": "docs/prd.md" },
+  "prd": { "status": "planned", "path": "docs/prd.md", "authoredBy": null, "reviewedBy": null },
   "features": []
 }

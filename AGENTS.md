@@ -79,6 +79,44 @@ For each feature, in wave order from the PRD:
 
 Implementers never write or edit evaluation reports. Evaluators never edit product code.
 
+### Attribution (who did what)
+
+Two agent tools are used on this project (Claude Code and Codex). Every artifact must say which one produced it.
+
+- **Commits**: every commit made by an agent ends with these trailers (after a blank line), with the
+  tool and the exact model in use:
+  ```
+  Agent-Tool: claude-code | codex
+  Agent-Model: <model id, e.g. claude-opus-5-5>
+  Agent-Role: implementer | evaluator | author
+  ```
+  `author` = PRD/spec/plan/contract/docs work. Commits made by the human have no trailers.
+  List them with: `git log --format='%h %s | %(trailers:key=Agent-Tool,valueonly,separator=%x2C)'`
+- **Evaluation reports**: fill `Implemented by` (tool + model of the implementation commits) and the
+  evaluator's own `Tool` / `Model`. The evaluator should be a different tool than the implementer
+  whenever possible; it must always be a different session with empty context.
+- **`project-state.json`**: each feature records `implementedBy` and `evaluatedBy` (see format below).
+- **PR description**: states the implementing tool + model and links the latest evaluation report.
+
+### `project-state.json` feature format
+
+```json
+{
+  "id": "F03",
+  "name": "Storefront purchase and simulated gateway",
+  "wave": 3,
+  "status": "planned | specified | in_progress | in_evaluation | needs_fix | done",
+  "dir": "docs/features/F03-purchase",
+  "branch": "feat/F03-purchase",
+  "pr": "https://github.com/<owner>/<repo>/pull/<n> or null",
+  "implementedBy": "claude-code (claude-opus-5-5) or null",
+  "evaluatedBy": "codex (ChatGPT app, local, <model>) or null",
+  "latestReport": "docs/features/F03-purchase/reports/<YYYYMMDD-HHMM>-evaluation.md or null"
+}
+```
+
+Update `updatedAt` on every change. `latestReport` must point to an existing file.
+
 ### Definition of done (per feature)
 
 - Every PRD criterion of the feature is mapped to at least one contract item.
