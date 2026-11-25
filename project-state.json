@@ -1,0 +1,11 @@
+{
+  "project": "catraca",
+  "updatedAt": "2026-11-25",
+  "statusValues": ["planned", "specified", "in_progress", "in_evaluation", "needs_fix", "done"],
+  "harness": {
+    "status": "done",
+    "commands": { "up": "npm run up", "down": "npm run down", "gates": "npm run gates" }
+  },
+  "prd": { "status": "planned", "path": "docs/prd.md" },
+  "features": []
+}

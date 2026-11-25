@@ -1,0 +1,20 @@
+# Isolated Postgres used only by `npm run gates` (compose project "catraca-gates").
+# Started and removed (with its volume) by scripts/gates.mjs on every run.
+name: catraca-gates
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: catraca
+      POSTGRES_PASSWORD: catraca
+      POSTGRES_DB: catraca
+    ports:
+      - "127.0.0.1:${GATES_DB_PORT:-55433}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catraca -d catraca"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
