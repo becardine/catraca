@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { registerAuth } from "./auth/plugin.js";
 import { registerCheckin } from "./checkin/index.js";
 import type { Config } from "./config.js";
+import { registerDashboard } from "./dashboard/index.js";
 import type { Pool } from "./db/pool.js";
 import { createEventsRegistry, type EventsRegistry, registerEvents } from "./events/index.js";
 import { registerPartnerApi } from "./partner-api/index.js";
@@ -44,6 +45,8 @@ export async function buildApp({ config, pool }: AppDeps): Promise<FastifyInstan
   await registerPartnerApi(app, deps);
   // F05 — check-in section and route on the management page.
   registerCheckin(app, deps);
+  // F06 — event dashboard (management section).
+  registerDashboard(app, deps);
 
   app.setNotFoundHandler((request, reply) =>
     sendPage(

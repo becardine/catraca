@@ -94,13 +94,13 @@
       "id": "F06",
       "name": "Event dashboard",
       "wave": 4,
-      "status": "planned",
+      "status": "done",
       "dir": "docs/features/F06-dashboard",
       "branch": "feat/F06-dashboard",
-      "pr": null,
-      "implementedBy": null,
-      "evaluatedBy": null,
-      "latestReport": null
+      "pr": "https://github.com/becardine/catraca/pull/8",
+      "implementedBy": "claude-code (claude-opus-5-5)",
+      "evaluatedBy": "codex (Codex CLI, gpt-6)",
+      "latestReport": "docs/features/F06-dashboard/reports/20261126-2054-evaluation.md"
     },
     {
       "id": "F07",

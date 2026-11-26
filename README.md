@@ -98,4 +98,5 @@ git log --format='%h %s | %(trailers:key=Agent-Tool,valueonly,separator=%x2C)'
 | F03 Compra e gateway simulado | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F03-purchase/reports/20261126-0129-evaluation.md) |
 | F04 API de parceiros | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F04-partner-api/reports/20261126-2053-evaluation.md) |
 | F05 Check-in | Codex CLI (gpt-6) | Claude Code (claude-opus-5-5, subagente novo) | [relatório](docs/features/F05-checkin/reports/20261126-2051-evaluation.md) |
+| F06 Painel do evento | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F06-dashboard/reports/20261126-2054-evaluation.md) |
 | *(features do PRD, a preencher)* | | | |
