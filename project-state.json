@@ -85,7 +85,7 @@
       "status": "done",
       "dir": "docs/features/F05-checkin",
       "branch": "feat/F05-checkin",
-      "pr": null,
+      "pr": "https://github.com/becardine/catraca/pull/7",
       "implementedBy": "codex (Codex CLI, gpt-6)",
       "evaluatedBy": "claude-code (fresh subagent, claude-opus-5-5)",
       "latestReport": "docs/features/F05-checkin/reports/20261126-2051-evaluation.md"
