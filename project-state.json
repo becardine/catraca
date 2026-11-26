@@ -37,7 +37,7 @@
       "status": "done",
       "dir": "docs/features/F01-accounts",
       "branch": "feat/F01-accounts",
-      "pr": null,
+      "pr": "https://github.com/becardine/catraca/pull/3",
       "implementedBy": "claude-code (claude-opus-5-5)",
       "evaluatedBy": "codex (Codex CLI, gpt-6)",
       "latestReport": "docs/features/F01-accounts/reports/20261126-0048-evaluation.md"
