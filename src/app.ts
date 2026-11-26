@@ -3,6 +3,7 @@ import { registerAuth } from "./auth/plugin.js";
 import type { Config } from "./config.js";
 import type { Pool } from "./db/pool.js";
 import { createEventsRegistry, type EventsRegistry, registerEvents } from "./events/index.js";
+import { registerTickets } from "./tickets/index.js";
 import { html } from "./ui/html.js";
 import { renderPage, sendPage } from "./ui/layout.js";
 
@@ -35,6 +36,8 @@ export async function buildApp({ config, pool }: AppDeps): Promise<FastifyInstan
   await registerAuth(app, deps);
   // F02 — events and storefront.
   registerEvents(app, deps);
+  // F03 — purchase, gateway results, "Meus ingressos" (gateway worker starts in main.ts).
+  registerTickets(app, deps);
 
   app.setNotFoundHandler((request, reply) =>
     sendPage(
