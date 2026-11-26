@@ -1,9 +1,11 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerAuth } from "./auth/plugin.js";
+import { registerCheckin } from "./checkin/index.js";
 import type { Config } from "./config.js";
 import { registerDashboard } from "./dashboard/index.js";
 import type { Pool } from "./db/pool.js";
 import { createEventsRegistry, type EventsRegistry, registerEvents } from "./events/index.js";
+import { registerPartnerApi } from "./partner-api/index.js";
 import { registerTickets } from "./tickets/index.js";
 import { html } from "./ui/html.js";
 import { renderPage, sendPage } from "./ui/layout.js";
@@ -39,6 +41,10 @@ export async function buildApp({ config, pool }: AppDeps): Promise<FastifyInstan
   registerEvents(app, deps);
   // F03 — purchase, gateway results, "Meus ingressos" (gateway worker starts in main.ts).
   registerTickets(app, deps);
+  // F04 — partner API under /api/partner (own key hook, error and 404 handlers).
+  await registerPartnerApi(app, deps);
+  // F05 — check-in section and route on the management page.
+  registerCheckin(app, deps);
   // F06 — event dashboard (management section).
   registerDashboard(app, deps);
 
