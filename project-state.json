@@ -106,13 +106,13 @@
       "id": "F07",
       "name": "Event cancellation",
       "wave": 5,
-      "status": "planned",
+      "status": "done",
       "dir": "docs/features/F07-cancellation",
       "branch": "feat/F07-cancellation",
-      "pr": null,
-      "implementedBy": null,
-      "evaluatedBy": null,
-      "latestReport": null
+      "pr": "https://github.com/becardine/catraca/pull/9",
+      "implementedBy": "claude-code (claude-opus-5-5)",
+      "evaluatedBy": "codex (Codex CLI, gpt-6)",
+      "latestReport": "docs/features/F07-cancellation/reports/20261126-2128-evaluation.md"
     }
   ],
   "waves": [

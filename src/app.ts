@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerAuth } from "./auth/plugin.js";
+import { registerCancellation } from "./cancellation/index.js";
 import { registerCheckin } from "./checkin/index.js";
 import type { Config } from "./config.js";
 import { registerDashboard } from "./dashboard/index.js";
@@ -47,6 +48,8 @@ export async function buildApp({ config, pool }: AppDeps): Promise<FastifyInstan
   registerCheckin(app, deps);
   // F06 — event dashboard (management section).
   registerDashboard(app, deps);
+  // F07 — cancellation (management section + route).
+  registerCancellation(app, deps);
 
   app.setNotFoundHandler((request, reply) =>
     sendPage(
