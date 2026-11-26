@@ -6,8 +6,13 @@
   `GATEWAY_DELAY_SCALE=1`, i.e. the brief's real timings).
 - Shell: bash. On Windows: `"C:\Program Files\Git\bin\bash.exe" -lc 'cd /d/projects/mba/catraca && <commands>'`.
   `WEB=http://localhost:3000`. `SQL() { docker compose exec -T db psql -U catraca -tAc "$1"; }`.
-- Cookie jars: `jarA` (org A), `jarB` (org B), `jarP` (seed participant), all via `POST /login`, password `catraca123`.
-  `jarQ`: a second participant created with `POST /signup` (name, fresh e-mail, password `segredo1`).
+- Cookie jars (signup logs the new account in, so `jarQ` needs no separate login):
+  ```sh
+  login() { curl -s -o /dev/null -c "$1" -X POST "$WEB/login" --data-urlencode "email=$2" --data-urlencode password=catraca123; }
+  login jarA org.a@catraca.test; login jarB org.b@catraca.test; login jarP participante@catraca.test
+  curl -s -o /dev/null -c jarQ -X POST "$WEB/signup" --data-urlencode name=Quarta \
+    --data-urlencode "email=q-$(date +%s)@example.com" --data-urlencode password=segredo1
+  ```
 - Helper to create a **published** event as A and return its id (`NEXT=$(date -d "+1 month" +%Y-%m-%dT20:00)`):
   ```sh
   mkevent() { # $1=name $2=capacity $3=price
@@ -32,15 +37,23 @@
 ### F03-C2 — Simulated gateway outcomes and timings (R08)
 
 - **Steps**: `E=$(mkevent "F03 C2" 10 "10,00")`; buy once with each card `…0001`, `…0002`, `…0003`, `…0004`, `…0005`
-  (as `jarP`); wait 45 s; `SQL "select right(j.card_last4,4), t.status, round(extract(epoch from t.updated_at - t.created_at)::numeric,1) from tickets t join payment_jobs j on j.ticket_id=t.id where t.event_id='$E' order by 1"`;
-  then load "Meus ingressos".
-- **Expected**: `0001 confirmed` and `0002 declined`, each with latency 2–5 s; `0003 confirmed` and
-  `0004 declined`, each 30–40 s; `0005 declined`, 2–5 s. "Meus ingressos" shows `confirmado` and `recusado` labels for them.
+  (as `jarP`); wait 45 s; then
+  ```sh
+  SQL "select j.card_last4, t.status, extract(epoch from t.updated_at - t.created_at) as s,
+         case when j.card_last4 in ('0003','0004') then extract(epoch from t.updated_at - t.created_at) between 30 and 40
+              else extract(epoch from t.updated_at - t.created_at) between 2 and 5 end as in_window
+       from tickets t join payment_jobs j on j.ticket_id=t.id where t.event_id='$E' order by 1"
+  ```
+  and load "Meus ingressos".
+- **Expected**: statuses `0001 confirmed`, `0002 declined`, `0003 confirmed`, `0004 declined`, `0005 declined`, and
+  `in_window` is `t` on all five rows (unrounded latency; 2–5 s for 0001/0002/0005, 30–40 s for 0003/0004).
+  "Meus ingressos" shows `confirmado` and `recusado` labels for them.
 
 ### F03-C3 — Card numbers that are not 16 digits are rejected before creating a ticket
 
-- **Steps**: `E=$(mkevent "F03 C3" 5 "10,00")`; `buy jarP $E 400000000000001` (15 digits); `buy jarP $E 4000abcd00000001`;
-  `buy jarP $E ""`; `SQL "select count(*) from tickets where event_id='$E'"`.
+- **Steps**: `E=$(mkevent "F03 C3" 5 "10,00")`; for each card in `400000000000001` (15 digits), `4000abcd00000001`
+  and an empty value: `curl -s -i -b jarP -X POST "$WEB/events/$E/purchase" --data-urlencode "cardNumber=<card>"`
+  (keep status line and body); then `SQL "select count(*) from tickets where event_id='$E'"`.
 - **Expected**: three `422` (body contains `Informe um número de cartão com 16 dígitos.`); count `0`.
 
 ### F03-C4 — A pending ticket occupies the seat; a decline frees it (R05, R06, R08)
@@ -66,8 +79,11 @@
     --data-urlencode cardNumber=4000000000000001 | sort | uniq -c
   SQL "select count(*) from tickets where event_id='$E' and status in ('pending','confirmed')"
   ```
-- **Expected**: each round prints exactly `5 303` and `25 409`; the query returns `5`. The automated test
-  `tests/purchase.test.ts` › "no overselling under 30 concurrent purchases" (5 fresh events) passes in F03-C-GATES.
+- **Expected**: each round prints exactly `5 303` and `25 409`; the query returns `5`.
+  Automated proof (runs in F03-C-GATES; the evaluator also reads the test to confirm these assertions):
+  `tests/purchase.test.ts` › "no overselling under 30 concurrent purchases" creates **5 fresh events with capacity 5**,
+  fires **30 concurrent `purchaseTicket` calls** on each, and asserts per event exactly **5 `ok`**, **25 `sold_out`**,
+  and `seatStats(...).occupied === 5 <= capacity`.
 
 ### F03-C7 — Unique codes; "Meus ingressos" shows only one's own tickets (R09)
 
@@ -85,11 +101,18 @@
 
 ### F03-C9 — Gateway results only apply to pending tickets (R08, R11)
 
-- **Steps**: `E=$(mkevent "F03 C9" 5 "10,00")`; `buy jarP $E 4000000000000003`; immediately
-  `SQL "update tickets set status='cancelled' where event_id='$E'"` (simulates F07); wait 45 s;
-  `SQL "select t.status, j.processed_at is not null from tickets t join payment_jobs j on j.ticket_id=t.id where t.event_id='$E'"`.
-- **Expected**: `cancelled|t` (the job ran and did not change the ticket). The automated test
-  `tests/gateway.test.ts` › "applies results only to pending tickets" passes in F03-C-GATES.
+- **Steps**: `E=$(mkevent "F03 C9" 10 "10,00")`; buy 4 tickets with `…0003` (slow approve) and 4 with `…0004`
+  (slow decline). Immediately, while all are pending, force one ticket of each card into each non-pending status:
+  ```sh
+  SQL "with r as (select t.id, j.card_last4, row_number() over (partition by j.card_last4 order by t.id) n
+                  from tickets t join payment_jobs j on j.ticket_id=t.id where t.event_id='$E')
+       update tickets t set status = (array['confirmed','declined','cancelled','refunded'])[r.n] from r where t.id=r.id"
+  ```
+  Wait 45 s; `SQL "select j.card_last4, t.status, j.processed_at is not null from tickets t join payment_jobs j on j.ticket_id=t.id where t.event_id='$E' order by 1,2"`.
+- **Expected**: 8 rows, all jobs processed (`t`), and the statuses still `confirmed`, `declined`, `cancelled`, `refunded`
+  for both `0003` and `0004` (no answer changed a non-pending ticket). Automated proof (F03-C-GATES):
+  `tests/gateway.test.ts` › "applies results only to pending tickets" calls `applyGatewayResult` with approve **and**
+  decline on tickets in each of `confirmed`, `declined`, `cancelled`, `refunded` and asserts no change (returns `false`).
 
 ### F03-C10 — Gateway jobs survive an app restart
 
@@ -115,8 +138,10 @@
 
 ### F03-C13 — X-F02-F03-2: capacity cannot go below occupied seats (R03, R05)
 
-- **Steps**: `E=$(mkevent "F03 C13" 2 "10,00")`; `buy jarP $E 4000000000000001`; `buy jarP $E 4000000000000003` (1 confirmed,
-  1 pending); as A POST edit with `capacity=1` (other fields valid); then with `capacity=3`; `buy jarQ $E 4000000000000001`.
+- **Steps**: `E=$(mkevent "F03 C13" 2 "10,00")`; `buy jarP $E 4000000000000001`; wait until that ticket is `confirmed`
+  (≤ 6 s); `buy jarP $E 4000000000000003`; verify `SQL "select status, count(*) from tickets where event_id='$E' group by 1 order by 1"`
+  returns `confirmed|1` and `pending|1`; as A POST edit with `capacity=1` (other fields valid); then with `capacity=3`;
+  `buy jarQ $E 4000000000000001`.
 - **Expected**: `capacity=1` → `422` with `A lotação não pode ser menor que as vagas ocupadas (2).` and capacity stays `2`;
   `capacity=3` → `303`; Q's purchase → `303`.
 
