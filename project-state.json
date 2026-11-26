@@ -1,6 +1,6 @@
 {
   "project": "catraca",
-  "updatedAt": "2026-11-25",
+  "updatedAt": "2026-11-26",
   "statusValues": ["planned", "specified", "in_progress", "in_evaluation", "needs_fix", "done"],
   "featureFormat": {
     "id": "F03",
@@ -17,8 +17,134 @@
   "harness": {
     "status": "done",
     "implementedBy": "claude-code (claude-opus-5-5)",
-    "commands": { "up": "npm run up", "down": "npm run down", "gates": "npm run gates" }
+    "commands": {
+      "up": "npm run up",
+      "down": "npm run down",
+      "gates": "npm run gates"
+    }
   },
-  "prd": { "status": "planned", "path": "docs/prd.md", "authoredBy": null, "reviewedBy": null },
-  "features": []
+  "prd": {
+    "status": "in_review",
+    "path": "docs/prd.md",
+    "authoredBy": "claude-code (claude-opus-5-5)",
+    "reviewedBy": "codex (gpt-6) — PR #2 comment"
+  },
+  "features": [
+    {
+      "id": "F01",
+      "name": "Accounts and access",
+      "wave": 1,
+      "status": "planned",
+      "dir": "docs/features/F01-accounts",
+      "branch": "feat/F01-accounts",
+      "pr": null,
+      "implementedBy": null,
+      "evaluatedBy": null,
+      "latestReport": null
+    },
+    {
+      "id": "F02",
+      "name": "Event management and storefront listing",
+      "wave": 2,
+      "status": "planned",
+      "dir": "docs/features/F02-events",
+      "branch": "feat/F02-events",
+      "pr": null,
+      "implementedBy": null,
+      "evaluatedBy": null,
+      "latestReport": null
+    },
+    {
+      "id": "F03",
+      "name": "Ticket purchase and simulated gateway",
+      "wave": 3,
+      "status": "planned",
+      "dir": "docs/features/F03-purchase",
+      "branch": "feat/F03-purchase",
+      "pr": null,
+      "implementedBy": null,
+      "evaluatedBy": null,
+      "latestReport": null
+    },
+    {
+      "id": "F04",
+      "name": "Partner API",
+      "wave": 4,
+      "status": "planned",
+      "dir": "docs/features/F04-partner-api",
+      "branch": "feat/F04-partner-api",
+      "pr": null,
+      "implementedBy": null,
+      "evaluatedBy": null,
+      "latestReport": null
+    },
+    {
+      "id": "F05",
+      "name": "Check-in",
+      "wave": 4,
+      "status": "planned",
+      "dir": "docs/features/F05-checkin",
+      "branch": "feat/F05-checkin",
+      "pr": null,
+      "implementedBy": null,
+      "evaluatedBy": null,
+      "latestReport": null
+    },
+    {
+      "id": "F06",
+      "name": "Event dashboard",
+      "wave": 4,
+      "status": "planned",
+      "dir": "docs/features/F06-dashboard",
+      "branch": "feat/F06-dashboard",
+      "pr": null,
+      "implementedBy": null,
+      "evaluatedBy": null,
+      "latestReport": null
+    },
+    {
+      "id": "F07",
+      "name": "Event cancellation",
+      "wave": 5,
+      "status": "planned",
+      "dir": "docs/features/F07-cancellation",
+      "branch": "feat/F07-cancellation",
+      "pr": null,
+      "implementedBy": null,
+      "evaluatedBy": null,
+      "latestReport": null
+    }
+  ],
+  "waves": [
+    {
+      "wave": 1,
+      "features": ["F01"],
+      "mode": "sequential"
+    },
+    {
+      "wave": 2,
+      "features": ["F02"],
+      "mode": "sequential"
+    },
+    {
+      "wave": 3,
+      "features": ["F03"],
+      "mode": "sequential"
+    },
+    {
+      "wave": 4,
+      "features": ["F04", "F05", "F06"],
+      "mode": "parallel"
+    },
+    {
+      "wave": 5,
+      "features": ["F07"],
+      "mode": "sequential"
+    }
+  ],
+  "release": {
+    "status": "planned",
+    "criteria": "docs/prd.md §9 (H-AC*, REL-AC*)",
+    "latestReport": null
+  }
 }

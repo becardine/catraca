@@ -156,6 +156,7 @@ Update `updatedAt` on every change. `latestReport` must point to an existing fil
 | PRD (features, dependencies, waves, acceptance criteria) | `docs/prd.md` |
 | Per-feature spec / plan / contract | `docs/features/<ID>-<slug>/{spec,plan,contract}.md` |
 | Evaluation reports | `docs/features/<ID>-<slug>/reports/*.md` |
+| Release verification reports (PRD §9) | `docs/release/reports/*.md` |
 | Templates | `docs/templates/` |
 | Project state (status per feature) | `project-state.json` |
 | Harness scripts | `scripts/up.mjs`, `scripts/down.mjs`, `scripts/gates.mjs` |
