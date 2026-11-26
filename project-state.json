@@ -27,7 +27,7 @@
     "status": "in_review",
     "path": "docs/prd.md",
     "authoredBy": "claude-code (claude-opus-5-5)",
-    "reviewedBy": null
+    "reviewedBy": "codex (gpt-6) — PR #2 comment"
   },
   "features": [
     {
@@ -141,5 +141,10 @@
       "features": ["F07"],
       "mode": "sequential"
     }
-  ]
+  ],
+  "release": {
+    "status": "planned",
+    "criteria": "docs/prd.md §9 (H-AC*, REL-AC*)",
+    "latestReport": null
+  }
 }

@@ -1,7 +1,7 @@
 # PRD — Catraca MVP
 
 - **Source**: `docs/brief.md` (rules R01–R13, partner API contract, evaluator flow). The brief wins on any conflict.
-- **Status**: draft for review
+- **Status**: revised after review by Codex (PR #2 comment)
 - **Audience**: implementer and evaluator agents (see `AGENTS.md`)
 
 ## 1. Problem and goal
@@ -81,8 +81,8 @@ These keep features that are built in parallel compatible. A spec may refine the
 - F01: `requireOrganizer`, `request.user`, `renderPage`.
 
 **Acceptance criteria**
-- **F02-AC1** (R01) An organizer creates an event with name, start date and time, venue, capacity (integer ≥ 1) and price (> 0). Each invalid value (empty name or venue, capacity 0 or non-integer, price 0 or negative) is rejected with a message and nothing is saved.
-- **F02-AC2** (R01) A start date in the past (e.g. yesterday) is rejected on create **and** on edit.
+- **F02-AC1** (R01) An organizer creates an event with name, start date and time, venue, capacity (integer ≥ 1) and price (> 0). Each invalid value is rejected with a message and nothing is saved: empty name or venue, missing or unparseable start, capacity 0 or non-integer, price 0, negative or unparseable.
+- **F02-AC2** (R01) A start that is not in the future is rejected on create **and** on edit: yesterday via the UI, and `starts_at <= now()` at the boundary via an automated test with a controlled clock (`now` injected). A start 1 minute after `now` is accepted.
 - **F02-AC3** (R02) A new event is a draft and does not appear on the storefront. After it is published it appears on the storefront with name, date, venue and price.
 - **F02-AC4** (R04) Each event has its own management page URL (`/organizer/events/:id`) where the owner edits it and publishes it. Publish is offered only for drafts.
 - **F02-AC5** (R13) Organizer B's event list does not show organizer A's events. Opening A's management URL as B returns a 404 page with no event data (no name, numbers or tickets). B's edit/publish POSTs to A's event return 404 and change nothing.
@@ -105,7 +105,7 @@ These keep features that are built in parallel compatible. A spec may refine the
 - F02: `events` table, `listOnSaleEvents`, event page, `updateEvent` validation hook.
 
 **Acceptance criteria**
-- **F03-AC1** (R06) A logged-in participant buys one ticket on the event page. The answer does not wait for the gateway, and "Meus ingressos" immediately shows the ticket as `pendente`.
+- **F03-AC1** (R06) A logged-in participant buys one ticket on the event page with the slow card `…0003`. The purchase response arrives within 1 s, while the ticket is still `pending` (its job is unresolved), and "Meus ingressos" immediately shows it as `pendente`.
 - **F03-AC2** (R08) With `GATEWAY_DELAY_SCALE=1`: card ending `0001` → `confirmado` within 2–5 s; `0002` → `recusado` within 2–5 s; `0003` → `confirmado` within 30–40 s; `0004` → `recusado` within 30–40 s; any other ending → `recusado` within 2–5 s.
 - **F03-AC3** A card number that is not exactly 16 digits is rejected before creating a ticket (the ticket count does not change).
 - **F03-AC4** (R05, R06, R08) A pending ticket occupies a seat until the gateway answers. A decline frees the seat (`available` goes back up by 1).
@@ -134,7 +134,8 @@ These keep features that are built in parallel compatible. A spec may refine the
 
 **Acceptance criteria**
 - **F04-AC1** (R02, R05) `GET /api/partner/events` → 200 with a JSON array of exactly `{ id, name, startsAt, priceCents, availableSeats }` for published, non-cancelled events only. `availableSeats` equals R05.
-- **F04-AC2** (R06) A valid purchase → 202 `{ ticketId, code, status: "pending" }`, answered without waiting for the gateway.
+- **F04-AC2** (R06) A valid purchase → 202 `{ ticketId, code, status: "pending" }`. With the slow card `…0003`, the response arrives within 1 s and an immediate `GET /api/partner/tickets/:id` still shows `pending`.
+- **F04-AC7** API purchases are not linked to participant accounts. A purchase whose `buyerEmail` is the seed participant's e-mail is stored with no account (`buyer_user_id` null) and does not appear in that participant's "Meus ingressos".
 - **F04-AC3** (R07) The error order is: 422 `invalid_request` (missing field, malformed e-mail, card not 16 digits, e.g. `"123"`) → 404 `event_not_available` (unknown, draft or cancelled event) → 409 `sold_out`. For example, an invalid body on a draft event gives 422, and a valid body on a draft event gives 404.
 - **F04-AC4** `GET /api/partner/tickets/:id` → 200 `{ ticketId, code, eventId, status, checkedIn }` for a ticket from any channel. An unknown id → 404 `ticket_not_found`.
 - **F04-AC5** All three routes answer 401 `{"error":"unauthorized"}` without the header and with a wrong key. The key check comes before any other error.
@@ -180,7 +181,7 @@ These keep features that are built in parallel compatible. A spec may refine the
 - F03: `tickets`, `seatStats`.
 
 **Acceptance criteria**
-- **F06-AC1** (R12, R05) The dashboard shows: Confirmados (confirmed, including checked in), Pendentes, Check-ins (confirmed with check-in), Vagas disponíveis (R05), Receita (sum of `price_cents_paid` of confirmed tickets, shown as `R$ 0,00`) and Estornados (refunded).
+- **F06-AC1** (R12, R05) The dashboard shows: Confirmados (confirmed, including checked in), Pendentes, Check-ins (confirmed with check-in), Vagas disponíveis (R05), Receita (sum of `price_cents_paid` of confirmed tickets, formatted as Brazilian currency, e.g. `R$ 350,00`; `R$ 0,00` when there are none) and Estornados (refunded).
 - **F06-AC2** (R12) Declined and cancelled tickets are counted in none of the numbers, and refunded tickets add nothing to Receita.
 - **F06-AC3** (R12) The numbers are computed from tickets at render time, with no stored counters. A reload after a gateway answer shows the new numbers.
 
@@ -211,8 +212,12 @@ These keep features that are built in parallel compatible. A spec may refine the
 - **X-F02-F07-1** (R04, R11) The management page of a cancelled event shows no edit form and no publish action, and the edit/publish routes reject changes.
 - **X-F03-F07-1** (R08, R11) A pending ticket whose payment job is still scheduled when the event is cancelled ends up `cancelled` after the job runs, never `confirmed` or `declined`.
 - **X-F04-F07-1** (R11) After cancellation, the event is absent from `GET /api/partner/events`, `POST …/purchases` returns 404 `event_not_available`, and `GET /api/partner/tickets/:id` shows `refunded` / `cancelled`.
-- **X-F04-F07-2** (R05, R10, R11, R12) API purchases count exactly like storefront ones: on one event with tickets bought through both channels, the dashboard counts both, check-in accepts both codes, and cancellation refunds or cancels both.
-- **X-F05-F07-1** (R10, R11) On a cancelled event, the code of a formerly confirmed ticket gives `Evento cancelado`, either in place of the field or as the check-in answer. A code from another event still gives `Ingresso inválido para este evento`.
+- **X-F04-F07-2** (R05, R10, R11, R12) API purchases count exactly like storefront ones. Fixture: a published event with capacity 4 and price R$ 10,00; S1 = storefront `…0001`, A1 = API `…0001`, A2 = API `…0003` (slow). After S1 and A1 are confirmed:
+  - Check-in of A1's code → `Entrada liberada`, and `GET /api/partner/tickets/A1` → `checkedIn: true`.
+  - Dashboard → Confirmados 2, Pendentes 1, Check-ins 1, Vagas disponíveis 1, Receita R$ 20,00, Estornados 0.
+  - Cancel the event before A2 resolves → S1 and A1 `refunded`, A2 `cancelled` (also after A2's job runs).
+  - Dashboard → Confirmados 0, Pendentes 0, Check-ins 0, Vagas disponíveis 0, Receita R$ 0,00, Estornados 2.
+- **X-F05-F07-1** (R10, R11) On a cancelled event, the code of a formerly confirmed ticket gives `Evento cancelado`, either in place of the field or as the check-in answer. **If the field remains available**, a code from another event still gives `Ingresso inválido para este evento`. Either way, the domain function `checkIn` returns `Ingresso inválido para este evento` for that foreign code (automated test).
 - **X-F06-F07-1** (R11, R12) Evaluator-flow scenario (5 seats, one confirmed, one slow pending, then cancel): the dashboard shows Confirmados 0, Pendentes 0, Check-ins 0, Vagas disponíveis 0, Receita R$ 0,00 and Estornados 1, also after the slow gateway answer.
 
 ## 5. Dependency graph and waves
@@ -274,19 +279,21 @@ Each cross-feature criterion goes in the contract of the **consuming** feature (
 | R04 | F02-AC4, X-F02-F05-1, X-F02-F06-1, X-F02-F07-1 |
 | R05 | F03-AC4, X-F02-F03-2, F04-AC1, X-F03-F04-1, F06-AC1, F07-AC5, X-F04-F07-2 |
 | R06 | F03-AC1, F03-AC4, F04-AC2, X-F03-F04-1 |
-| R07 | F03-AC5, F03-AC6, F04-AC3, F04-AC6 |
+| R07 | F03-AC5, F03-AC6, F04-AC3, F04-AC6, REL-AC2 |
 | R08 | F03-AC2, F03-AC4, F03-AC9, X-F03-F04-1, F07-AC3, X-F03-F07-1 |
 | R09 | F03-AC7, X-F01-F03-1, X-F03-F04-2, X-F03-F05-1 |
 | R10 | F05-AC1, F05-AC2, F05-AC3, X-F03-F05-1, X-F04-F07-2, X-F05-F07-1 |
 | R11 | F03-AC9, F07-AC1 … F07-AC5, X-F02-F07-1, X-F03-F07-1, X-F04-F07-1, X-F04-F07-2, X-F05-F07-1, X-F06-F07-1 |
-| R12 | F06-AC1, F06-AC2, F06-AC3, X-F03-F06-1, X-F04-F07-2, X-F06-F07-1 |
+| R12 | F06-AC1, F06-AC2, F06-AC3, X-F03-F06-1, X-F04-F07-2, X-F06-F07-1, REL-AC2 |
+
+REL-AC1 also covers every rule end to end.
 | R13 | F01-AC4, F02-AC5, X-F01-F02-1, X-F02-F05-1, X-F02-F06-1 |
 
 ## 7. Evaluator flow traceability
 
 | Brief flow step | Covered by |
 |---|---|
-| 1, 17 (up, gates, down, up again) | Harness (already delivered) + release verification (§9) |
+| 1, 17 (up, gates, down, up again) | H-AC1 … H-AC5, REL-AC1 |
 | 2, 4 (draft hidden, publish visible in UI and API) | F02-AC3, X-F02-F04-1, F04-AC1 |
 | 3 (past date rejected) | F02-AC2 |
 | 5 (signup, storefront purchase, pending → confirmed, code) | F01-AC1, F03-AC1, F03-AC2, F03-AC7 |
@@ -295,8 +302,11 @@ Each cross-feature criterion goes in the contract of the **consuming** feature (
 | 10 (check-in messages, check-in count) | F05-AC1, X-F03-F05-1, F06-AC1 |
 | 11 (organizer isolation, code from another event) | F02-AC5, X-F01-F02-1, X-F02-F05-1, X-F02-F06-1, F05-AC2 |
 | 12–14 (cancellation, refunds, late gateway, check-in, dashboard) | F07-AC1 … AC5, X-F02-F07-1, X-F03-F07-1, X-F04-F07-1, X-F05-F07-1, X-F06-F07-1 |
-| 15 (30-request burst, twice) | F03-AC6, F04-AC6 |
+| 15 (30-request burst, twice, dashboard within 10 s) | F03-AC6, F04-AC6, REL-AC2 |
 | 16 (401, 422, 404) | F04-AC3, F04-AC4, F04-AC5 |
+| 18 (artifacts, reports, state, parallel PRs) | H-AC6, REL-AC3 … REL-AC7 |
+| Brief: API purchases not linked to accounts | F04-AC7 |
+| Brief: every step together on `main` | REL-AC1 |
 
 ## 8. Out of scope
 
@@ -310,9 +320,29 @@ Each cross-feature criterion goes in the contract of the **consuming** feature (
 - Password recovery, profile editing and account deletion.
 - Partner management (a single partner key from the environment).
 
-## 9. Release verification (after wave 5, not a feature)
+## 9. Harness and release criteria (not features)
 
-After the last merge, on `main` from a clean clone:
-1. `npm run up` → run the brief's evaluator flow steps 2–16 (manually and/or with an end-to-end script over HTTP) → `npm run gates` → `npm run down` → `npm run up` again.
-2. Repeat the burst (step 15) on at least 5 fresh events.
-3. Any failure reopens the responsible feature (status `needs_fix`) for a fix and a new evaluation.
+These criteria have no feature of their own. The harness criteria hold from the first commit. The release
+criteria are verified once, after wave 5, on `main` from a clean clone, by an evaluator that did not
+implement the last wave. The result is recorded in `docs/release/reports/<YYYYMMDD-HHMM>-release.md`
+(same immutability rules as feature reports). Any failure reopens the responsible feature (`needs_fix`)
+for a fix and a new evaluation.
+
+### Harness
+
+- **H-AC1** On a clean clone, `npm run up` alone (no other step, no payment key) makes the product reachable at `http://localhost:3000` with the seed loaded: the three seed accounts log in.
+- **H-AC2** `npm run down` stops everything `up` started: `docker ps` lists no container of the project and port 3000 does not answer.
+- **H-AC3** After `npm run down`, `npm run up` succeeds again, the seed runs again without error, and the seed credentials still work.
+- **H-AC4** `npm run gates` runs lint, typecheck, build and automated tests, and passes on `main`.
+- **H-AC5** The default mode uses the simulated gateway with the brief's timings and needs no real key. A storefront and an API purchase with `…0001` are confirmed in that mode.
+- **H-AC6** `AGENTS.md` at the root has the up/down/gates commands, the project rules and the artifact map. `CLAUDE.md` points to it.
+
+### Release
+
+- **REL-AC1** (R01–R13) The brief's evaluator flow, steps 1–17, passes end to end on `main` from a clean clone, with all features together.
+- **REL-AC2** (R07, R12) For each of at least 5 fresh events with capacity 5: the brief's 30-request burst gives exactly 5 × `202` and 25 × `409`, and within 10 s the dashboard shows Confirmados 5 and Vagas disponíveis 0.
+- **REL-AC3** Every feature has `spec.md`, `plan.md` and `contract.md`. Every contract maps every criterion of its feature, plus the cross-feature criteria assigned to it in §5, to at least one item.
+- **REL-AC4** Every feature has at least one evaluation report with date, evaluated commit, implementing tool and model, evaluator tool and model, and a verdict per item with evidence. The latest report of each feature approves every item. `git log --format="%h %ad" -- <report>` shows exactly one commit for every report.
+- **REL-AC5** `project-state.json` lists every feature as `done`, with `latestReport` pointing to an existing file that is the newest report of that feature.
+- **REL-AC6** Wave 4 (F04, F05, F06) was implemented on separate branches at the same time and merged through PRs listed in the README. For each pair of those PRs, the first commit of one is earlier than the last commit of the other.
+- **REL-AC7** The repository is public, everything is on `main`, and the README has every section the brief requires: how to run, addresses, credentials, artifact map with wave-4 PR links, and decisions (stack, R07 under concurrency, async gateway, evaluator isolation).
