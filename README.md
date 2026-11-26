@@ -4,7 +4,17 @@ Venda de ingressos para eventos pequenos (shows em bar, workshops, meetups), con
 com Spec-Driven Development: PRD → spec, plano e contrato por feature → implementação por agente →
 avaliação por um agente independente.
 
-> Status: harness pronto. PRD e features em construção (veja `project-state.json`).
+> Status: harness pronto, PRD em revisão, features a implementar (veja `project-state.json`).
+
+| Feature | Wave |
+|---|---|
+| F01 Contas e acesso | 1 |
+| F02 Gestão de eventos e vitrine | 2 |
+| F03 Compra de ingressos e gateway simulado | 3 |
+| F04 API de parceiros | 4 (paralela) |
+| F05 Check-in | 4 (paralela) |
+| F06 Painel do evento | 4 (paralela) |
+| F07 Cancelamento de evento | 5 |
 
 ## Como rodar
 
@@ -48,7 +58,7 @@ A seed roda a cada subida e é idempotente.
 | Artefato | Onde |
 |---|---|
 | Brief original | [`docs/brief.md`](docs/brief.md) |
-| PRD | [`docs/prd.md`](docs/prd.md) *(a criar)* |
+| PRD (7 features, grafo, waves, critérios) | [`docs/prd.md`](docs/prd.md) |
 | Pasta de cada feature (spec, plano, contrato e relatórios) | `docs/features/<ID>-<slug>/` |
 | Templates | [`docs/templates/`](docs/templates/) |
 | Arquivo de estado | [`project-state.json`](project-state.json) |
