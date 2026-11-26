@@ -3,7 +3,10 @@
 ## Prerequisites
 
 - Commit under evaluation checked out; `npm run down -- --reset && npm run up` succeeded.
-- Shell: bash (on Windows, Git Bash: `"C:\Program Files\Git\bin\bash.exe" -lc "…"`). `WEB=http://localhost:3000`.
+- Shell: bash. On Windows run each item's commands with Git Bash, e.g.
+  `"C:\Program Files\Git\bin\bash.exe" -lc 'cd /d/projects/mba/catraca && <commands>'`. `WEB=http://localhost:3000`.
+- "Event data" of `$EVT` means any of: its name, its venue, its formatted date (`DD/MM/YYYY 20:00`), its
+  formatted price (`R$ 100,00` or `R$ 150,00`), or a form/link targeting `/organizer/events/$EVT`.
 - DB queries: `docker compose exec -T db psql -U catraca -tAc "<sql>"`.
 - Log in with cookie jars:
   `curl -s -o /dev/null -c jarA -X POST "$WEB/login" --data-urlencode email=org.a@catraca.test --data-urlencode password=catraca123`
@@ -45,7 +48,7 @@
 
 ### F02-C4 — Drafts are hidden from the storefront; published events appear (R02)
 
-- **Steps**: as a visitor: `curl -s "$WEB/"` and `curl -s -o /dev/null -w "%{http_code}" "$WEB/events/$EVT"`;
+- **Steps**: as a visitor: `curl -s "$WEB/"` and `curl -s -i "$WEB/events/$EVT"` (status line and body);
   then `curl -s -i -b jarA -X POST "$WEB/organizer/events/$EVT/publish"`; repeat both visitor requests.
 - **Expected**: before publishing, `/` does not contain `Jazz no Porão F02` and the event page answers `404`.
   Publish answers `303`. Afterwards, `/` contains the name, `Bar do Zé`, the date and `R$ 100,00`, and the
@@ -63,8 +66,9 @@
 - **Steps**: as B: `curl -s -b jarB "$WEB/organizer/events"`; `curl -s -i -b jarB "$WEB/organizer/events/$EVT"`;
   POST edit to `$EVT` with `name=Hacked` (other fields valid); POST `/organizer/events/$EVT/publish`;
   `select name, status from events where id='$EVT'`.
-- **Expected**: B's list does not contain `Jazz no Porão F02`; the management URL answers `404` and the body
-  contains neither `Jazz no Porão F02` nor `Bar do Zé`; both POSTs answer `404`; the row is unchanged.
+- **Expected**: B's list contains no event data of `$EVT`; the management URL answers `404` and its body
+  contains no event data of `$EVT` (see Prerequisites); both POSTs answer `404` and their bodies contain no event
+  data of `$EVT`; the row is unchanged.
 
 ### F02-C7 — Price edits and capacity increases are accepted (R03)
 
@@ -76,7 +80,7 @@
 ### F02-C8 — X-F01-F02-1: visitors and participants cannot reach a real organizer event (R13)
 
 - **Steps**: `curl -s -i "$WEB/organizer/events/$EVT"`; `curl -s -i -b jarP "$WEB/organizer/events/$EVT"`.
-- **Expected**: visitor → `303` `Location: /login`; participant → `403`; neither body contains `Jazz no Porão F02`.
+- **Expected**: visitor → `303` `Location: /login`; participant → `403`; neither body contains event data of `$EVT`.
 
 ### F02-C-GATES — Gates pass
 
