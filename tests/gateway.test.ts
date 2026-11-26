@@ -77,7 +77,12 @@ describe("gateway jobs", () => {
         other: await buy(event.id, CARD.other),
       };
       for (const ticket of Object.values(t)) expect(ticket.status).toBe("pending");
-      await waitFor(async () => (await statusOf(t.declineSlow.id)) !== "pending", 3000);
+      // Wait for every ticket: each job has its own random delay, so no single one is "the last".
+      await waitFor(async () => {
+        for (const ticket of Object.values(t))
+          if ((await statusOf(ticket.id)) === "pending") return false;
+        return true;
+      }, 5000);
       expect(await statusOf(t.approveFast.id)).toBe("confirmed");
       expect(await statusOf(t.declineFast.id)).toBe("declined");
       expect(await statusOf(t.approveSlow.id)).toBe("confirmed");
