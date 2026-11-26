@@ -14,6 +14,11 @@ Catraca sells tickets for small events (bar gigs, workshops, meetups). The produ
 | Quality gates | `npm run gates` | lint (Biome) → typecheck (tsc) → build → tests (Vitest) against an **isolated**, throwaway Postgres (`docker-compose.gates.yml`, port 55433). Must pass before any feature is marked done. |
 | Auto-fix formatting | `npm run format` | |
 
+**Parallel worktrees** (parallel waves, `.worktrees/<ID>/`, ignored by git): give each worktree its own
+stack so they never collide, e.g. for F04:
+`COMPOSE_PROJECT_NAME=catraca-f04 APP_PORT=3004 GATES_PROJECT=catraca-gates-f04 GATES_DB_PORT=55434`.
+Then that worktree's `WEB`/`API` is `http://localhost:3004`. Without these variables the defaults apply.
+
 Addresses after `npm run up`: **WEB** `http://localhost:3000`, **API** `http://localhost:3000/api/partner`.
 Seed credentials and the partner API key are in `README.md` and `src/db/seed.ts`.
 

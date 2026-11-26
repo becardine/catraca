@@ -63,7 +63,7 @@ A seed roda a cada subida e é idempotente.
 | Templates | [`docs/templates/`](docs/templates/) |
 | Arquivo de estado | [`project-state.json`](project-state.json) |
 | Porta de entrada dos agentes | [`AGENTS.md`](AGENTS.md) (o [`CLAUDE.md`](CLAUDE.md) aponta para ele) |
-| PRs da wave paralela | *(a preencher)* |
+| PRs da wave paralela (wave 4) | [#6 F04](https://github.com/becardine/catraca/pull/6), [#7 F05](https://github.com/becardine/catraca/pull/7), [#8 F06](https://github.com/becardine/catraca/pull/8) |
 
 ## Decisões
 
@@ -96,4 +96,5 @@ git log --format='%h %s | %(trailers:key=Agent-Tool,valueonly,separator=%x2C)'
 | F01 Contas e acesso | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F01-accounts/reports/20261126-0048-evaluation.md) |
 | F02 Gestão de eventos e vitrine | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F02-events/reports/20261126-0113-evaluation.md) |
 | F03 Compra e gateway simulado | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F03-purchase/reports/20261126-0129-evaluation.md) |
+| F04 API de parceiros | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F04-partner-api/reports/20261126-2053-evaluation.md) |
 | *(features do PRD, a preencher)* | | | |
