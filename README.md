@@ -10,7 +10,6 @@ avaliação por um agente independente.
 |---|---|
 | F01 Contas e acesso | 1 |
 | F02 Gestão de eventos e vitrine | 2 |
-| F03 Compra e gateway simulado | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F03-purchase/reports/20261126-0129-evaluation.md) |
 | F03 Compra de ingressos e gateway simulado | 3 |
 | F04 API de parceiros | 4 (paralela) |
 | F05 Check-in | 4 (paralela) |
