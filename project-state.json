@@ -34,11 +34,11 @@
       "id": "F01",
       "name": "Accounts and access",
       "wave": 1,
-      "status": "planned",
+      "status": "in_evaluation",
       "dir": "docs/features/F01-accounts",
       "branch": "feat/F01-accounts",
       "pr": null,
-      "implementedBy": null,
+      "implementedBy": "claude-code (claude-opus-5-5)",
       "evaluatedBy": null,
       "latestReport": null
     },
