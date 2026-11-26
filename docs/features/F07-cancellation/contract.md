@@ -26,7 +26,8 @@
   checkin() { curl -s -L -b jarA "$WEB/organizer/events/$1/checkin" --data-urlencode "code=$2" \
     | grep -o '<p class="checkin-result"[^>]*>[^<]*' | sed 's/.*>//'; }
   dash() { page=$(curl -s -b jarA "$WEB/organizer/events/$1"); for m in confirmed pending checkIns availableSeats revenue refunded; do
-    printf '%s=%s ' "$m" "$(echo "$page" | grep -o "data-metric=\"$m\">[^<]*" | sed 's/.*>//')"; done; echo; }
+    printf '%s=%s ' "$m" "$(echo "$page" | grep -o "data-metric=\"$m\">[^<]*" | sed 's/.*>//')"; done | sed 's/ $//'; echo; }
+  waitsince() { while [ $(( $(date +%s) - $1 )) -lt $2 ]; do sleep 1; done; }   # waitsince <epoch> <seconds>
   ```
 
 ## Items
@@ -45,23 +46,27 @@
 ### F07-C2 — X-F02-F07-1: a cancelled event cannot be edited or republished (F07-AC1, R04, R11)
 
 - **Steps**: `P=$(curl -s -b jarA "$WEB/organizer/events/$E1")`; check `P` for `Cancelado`, `Salvar alterações`,
-  `/organizer/events/$E1/publish` and `Cancelar evento`; then
+  `<form method="post" action="/organizer/events/$E1">`, `name="capacity"`, `/organizer/events/$E1/publish` and `Cancelar evento`; then
   `curl -s -i -b jarA -X POST "$WEB/organizer/events/$E1" --data-urlencode "name=Reaberto" --data-urlencode venue=Bar --data-urlencode "startsAt=$NEXT" --data-urlencode capacity=9 --data-urlencode "price=10,00"`;
   `curl -s -i -b jarA -X POST "$WEB/organizer/events/$E1/publish"`; `SQL "select name, status, capacity from events where id='$E1'"`.
 - **Expected**: the page shows `Cancelado` and `Este evento foi cancelado. Não é possível editá-lo nem republicá-lo.`, and has no
-  `Salvar alterações`, no publish form and no `Cancelar evento`; the edit answers `409` with `Evento cancelado não pode ser editado.`;
+  `Salvar alterações`, no edit form (`<form method="post" action="/organizer/events/$E1">`), no `name="capacity"` input, no publish
+  form and no `Cancelar evento`; the edit answers `409` with `Evento cancelado não pode ser editado.`;
   publish answers `409`; the row is still `F07 C1|cancelled|5`.
 
 ### F07-C3 — Tickets are refunded / cancelled within 10 s (F07-AC2, R11)
 
-- **Steps**: `E3=$(mkevent jarA "F07 C3" 5 "50,00")`; `T5=$(apibuy $E3 4000000000000003 | jget ticketId)`; `T6=$(apibuy $E3 4000000000000001 | jget ticketId)`;
-  `S5=$(date +%s)`; poll `ticket $T6` until `confirmed` (≤ 6 s); then (still < 30 s after `S5`) `cancel $E3 > /dev/null; C=$(date +%s)`;
-  `ticket $T6`; `ticket $T5`; `echo $(( $(date +%s) - C ))`.
-- **Expected**: right after the cancel (elapsed `≤ 10` s), `T6` is `"status":"refunded"` and `T5` is `"status":"cancelled"`.
+- **Steps**: `E3=$(mkevent jarA "F07 C3" 5 "50,00")`; `S5=$(date +%s)` (**before** the slow purchase);
+  `T5=$(apibuy $E3 4000000000000003 | jget ticketId)`; `T6=$(apibuy $E3 4000000000000001 | jget ticketId)`;
+  poll `ticket $T6` every 0.5 s until `confirmed` (≤ 6 s); check `$(( $(date +%s) - S5 )) -lt 25` (otherwise the item is invalid:
+  restart it); `C=$(date +%s)` (**before** the request); `cancel $E3 > /dev/null`; `ticket $T6`; `ticket $T5`; `echo $(( $(date +%s) - C ))`.
+- **Expected**: the elapsed time printed (from before the cancel request until both lookups returned) is `≤ 10` s, `T6` is
+  `"status":"refunded"` and `T5` is `"status":"cancelled"`; the cancel happened less than 30 s after `S5`, i.e. before T5's
+  slow answer (30–40 s).
 
 ### F07-C4 — X-F03-F07-1: a late gateway answer does not change them (F07-AC3, R08, R11)
 
-- **Steps**: wait until `$(date +%s) - S5 ≥ 45`; `ticket $T5`; `ticket $T6`;
+- **Steps**: `waitsince $S5 45`; `ticket $T5`; `ticket $T6`;
   `SQL "select t.id, t.status, j.processed_at is not null from tickets t join payment_jobs j on j.ticket_id=t.id where t.event_id='$E3' order by 1"`.
 - **Expected**: `T5` is still `cancelled` and `T6` still `refunded`, and both payment jobs are processed (`t`), so the slow approval
   did run and did not overwrite the cancellation.
@@ -89,18 +94,20 @@
 - **Steps**: `C6=$(ticket $T6 | jget code)`; `checkin $E3 "$C6"`; `OTHER=$(mkevent jarA "F07 other" 1 "10,00")`;
   `CO=$(apibuy $OTHER 4000000000000001 | jget code)`; `checkin $E3 "$CO"`; `checkin $E3 ZZZZZZZZ`;
   `curl -s -b jarA "$WEB/organizer/events/$E3" | grep -c 'name="code"'`; `dash $E3`.
-- **Expected**: `Evento cancelado` for C6; `Ingresso inválido para este evento` for the other event's code and for `ZZZZZZZZ` (the field
-  is still there: count ≥ `1`); `dash` prints exactly
+- **Expected**: `Evento cancelado` for C6. F05 keeps the check-in field on cancelled events (F05 spec), so the count is ≥ `1`
+  and the list applies: `Ingresso inválido para este evento` for the other event's code and for `ZZZZZZZZ`. Automated proof
+  (F07-C-GATES): `tests/cancellation.test.ts` › "check-in on a cancelled event" asserts the domain `checkIn` returns `invalid`
+  for a foreign code and `cancelled` for this event's codes; `dash` prints exactly
   `confirmed=0 pending=0 checkIns=0 availableSeats=0 revenue=R$ 0,00 refunded=1` (the brief's step-14 numbers, after the late
   gateway answer of C4).
 
 ### F07-C9 — X-F04-F07-2: API and storefront purchases are cancelled the same way (R05, R10, R11, R12)
 
 - **Steps**: `E9=$(mkevent jarA "F07 C9" 4 "10,00")`; `buy $E9 4000000000000001` (S1); `A1=$(apibuy $E9 4000000000000001 | jget ticketId)`;
-  `A2=$(apibuy $E9 4000000000000003 | jget ticketId)`; `S9=$(date +%s)`; `sleep 6`;
+  `S9=$(date +%s)` (**before** A2's purchase); `A2=$(apibuy $E9 4000000000000003 | jget ticketId)`; `sleep 6`;
   `S1=$(SQL "select id from tickets where event_id='$E9' and channel='storefront'")`; `checkin $E9 "$(ticket $A1 | jget code)"`;
-  `ticket $A1`; `dash $E9`; (still < 30 s after `S9`) `cancel $E9 > /dev/null`;
-  `SQL "select channel, status from tickets where event_id='$E9' order by channel, status"`; `dash $E9`; wait until 45 s after `S9`;
+  `ticket $A1`; `dash $E9`; check `$(( $(date +%s) - S9 )) -lt 25` (otherwise restart the item); `cancel $E9 > /dev/null`;
+  `SQL "select channel, status from tickets where event_id='$E9' order by channel, status"`; `dash $E9`; `waitsince $S9 45`;
   `ticket $A2`; `dash $E9`.
 - **Expected**: check-in `Entrada liberada`; `ticket $A1` shows `"checkedIn":true`; before the cancel, `dash` prints
   `confirmed=2 pending=1 checkIns=1 availableSeats=1 revenue=R$ 20,00 refunded=0`. After the cancel, the query shows
