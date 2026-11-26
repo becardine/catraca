@@ -46,13 +46,13 @@
       "id": "F02",
       "name": "Event management and storefront listing",
       "wave": 2,
-      "status": "planned",
+      "status": "done",
       "dir": "docs/features/F02-events",
       "branch": "feat/F02-events",
-      "pr": null,
-      "implementedBy": null,
-      "evaluatedBy": null,
-      "latestReport": null
+      "pr": "https://github.com/becardine/catraca/pull/4",
+      "implementedBy": "claude-code (claude-opus-5-5)",
+      "evaluatedBy": "codex (Codex CLI, gpt-6)",
+      "latestReport": "docs/features/F02-events/reports/20261126-0113-evaluation.md"
     },
     {
       "id": "F03",

@@ -4,7 +4,9 @@ import {
   createTestApp,
   form,
   login,
+  NEW_PASSWORD,
   SEED,
+  SEED_PASSWORD,
   sessionCookie,
   type TestContext,
   uniqueEmail,
@@ -27,7 +29,7 @@ describe("signup, login and logout", () => {
     const res = await ctx.app.inject({
       method: "POST",
       url: "/signup",
-      ...form({ name: "Nova Pessoa", email, password: "segredo1" }),
+      ...form({ name: "Nova Pessoa", email, password: NEW_PASSWORD }),
     });
     expect(res.statusCode).toBe(303);
     expect(res.headers.location).toBe("/");
@@ -50,10 +52,10 @@ describe("signup, login and logout", () => {
     await ctx.app.inject({
       method: "POST",
       url: "/signup",
-      ...form({ name: "Primeira", email: taken, password: "segredo1" }),
+      ...form({ name: "Primeira", email: taken, password: NEW_PASSWORD }),
     });
     const before = await userCount();
-    const valid = { name: "Fulano", email: uniqueEmail("bad"), password: "segredo1" };
+    const valid = { name: "Fulano", email: uniqueEmail("bad"), password: NEW_PASSWORD };
     const cases: [Record<string, string>, string][] = [
       [{ email: valid.email, password: valid.password }, "Informe o nome."],
       [{ ...valid, name: "  " }, "Informe o nome."],
@@ -77,7 +79,7 @@ describe("signup, login and logout", () => {
     const res = await ctx.app.inject({
       method: "POST",
       url: "/signup",
-      ...form({ name: "Hacker", email, password: "segredo1", role: "organizer" }),
+      ...form({ name: "Hacker", email, password: NEW_PASSWORD, role: "organizer" }),
     });
     const { rows } = await ctx.pool.query("SELECT role FROM users WHERE email = $1", [email]);
     expect(rows[0].role).toBe("participant");
@@ -99,7 +101,7 @@ describe("signup, login and logout", () => {
       const res = await ctx.app.inject({
         method: "POST",
         url: "/login",
-        ...form({ email, password: "catraca123" }),
+        ...form({ email, password: SEED_PASSWORD }),
       });
       expect(res.statusCode).toBe(303);
       expect(res.headers.location).toBe(location);
@@ -115,7 +117,7 @@ describe("signup, login and logout", () => {
   it("rejects wrong password and unknown e-mail the same way (F01-AC2)", async () => {
     for (const fields of [
       { email: SEED.orgA, password: "wrongpass" },
-      { email: "nobody@example.com", password: "catraca123" },
+      { email: "nobody@example.com", password: SEED_PASSWORD },
     ]) {
       const res = await ctx.app.inject({ method: "POST", url: "/login", ...form(fields) });
       expect(res.statusCode).toBe(401);
@@ -152,7 +154,7 @@ describe("signup, login and logout", () => {
     expect(rows).toHaveLength(3);
     for (const r of rows) {
       expect(r.password_hash.startsWith("scrypt:")).toBe(true);
-      expect(r.password_hash).not.toContain("catraca123");
+      expect(r.password_hash).not.toContain(SEED_PASSWORD);
     }
   });
 });

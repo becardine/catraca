@@ -2,17 +2,25 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { registerAuth } from "./auth/plugin.js";
 import type { Config } from "./config.js";
 import type { Pool } from "./db/pool.js";
+import { createEventsRegistry, type EventsRegistry, registerEvents } from "./events/index.js";
 import { html } from "./ui/html.js";
 import { renderPage, sendPage } from "./ui/layout.js";
-import { registerPlaceholders } from "./ui/placeholders.js";
 
 export interface AppDeps {
   config: Config;
   pool: Pool;
 }
 
-export async function buildApp({ pool }: AppDeps): Promise<FastifyInstance> {
+/** Shared by all features: the pool and F02's extension points. */
+export interface FeatureDeps {
+  config: Config;
+  pool: Pool;
+  events: EventsRegistry;
+}
+
+export async function buildApp({ config, pool }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({ logger: process.env.NODE_ENV === "production" });
+  const deps: FeatureDeps = { config, pool, events: createEventsRegistry() };
 
   app.get("/health", async (_req, reply) => {
     try {
@@ -24,8 +32,9 @@ export async function buildApp({ pool }: AppDeps): Promise<FastifyInstance> {
   });
 
   // F01 — accounts and access (must come first: fills request.user for every route below).
-  await registerAuth(app, { pool });
-  registerPlaceholders(app);
+  await registerAuth(app, deps);
+  // F02 — events and storefront.
+  registerEvents(app, deps);
 
   app.setNotFoundHandler((request, reply) =>
     sendPage(
