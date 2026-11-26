@@ -14,7 +14,7 @@ describe("GET /health", () => {
   });
 
   it("returns ok when the database is reachable", async () => {
-    const app = buildApp({ config: loadConfig({}), pool });
+    const app = await buildApp({ config: loadConfig({}), pool });
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ status: "ok" });

@@ -93,4 +93,5 @@ git log --format='%h %s | %(trailers:key=Agent-Tool,valueonly,separator=%x2C)'
 | Feature | Implementado por | Avaliado por | Relatório mais recente |
 |---|---|---|---|
 | Harness | Claude Code (claude-opus-5-5) | — | — |
+| F01 Contas e acesso | Claude Code (claude-opus-5-5) | Codex CLI (gpt-6) | [relatório](docs/features/F01-accounts/reports/20261126-0048-evaluation.md) |
 | *(features do PRD, a preencher)* | | | |
