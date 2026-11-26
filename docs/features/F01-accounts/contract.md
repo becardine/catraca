@@ -21,16 +21,19 @@ The evaluator exercises **only** what is written here, against the given commit,
   curl -s -b jar1 "$WEB/"
   docker compose exec -T db psql -U catraca -tAc "select role from users where email='$NEW'"
   ```
-- **Expected**: first response `303` with `Location: /` and a `Set-Cookie: catraca_session=…; HttpOnly`;
-  the home page contains `Nova Pessoa`; the query returns `participant`.
+- **Expected**: first response `303` with `Location: /` and a `Set-Cookie` header whose cookie
+  `catraca_session` has a non-empty value and the attributes `HttpOnly`, `SameSite=Lax`, `Path=/` and
+  `Max-Age=604800` (7 days), in any order; the home page contains `Nova Pessoa`; the query returns `participant`.
 
 ### F01-C2 — Invalid signups are rejected and create nothing
 
-- **Steps**: count users (`select count(*) from users`), then POST `/signup` with, one at a time:
-  (a) empty name, (b) `email=not-an-email`, (c) `password=123`, (d) the e-mail from C1 in upper case.
-- **Expected**: each answers `422`, has no `Set-Cookie: catraca_session`, and shows respectively
-  `Informe o nome.`, `Informe um e-mail válido.`, `A senha deve ter pelo menos 6 caracteres.`,
-  `Este e-mail já está cadastrado.`; the user count is unchanged.
+- **Steps**: count users (`select count(*) from users`), then POST `/signup` (all other fields valid, fresh
+  e-mail) with, one at a time:
+  (a) `name` omitted, (b) `name=` empty, (c) `email` omitted, (d) `email=not-an-email`,
+  (e) `password` omitted, (f) `password=123`, (g) the e-mail from C1 in upper case.
+- **Expected**: each answers `422`, has no `Set-Cookie: catraca_session`, and shows:
+  (a, b) `Informe o nome.`; (c, d) `Informe um e-mail válido.`; (e, f) `A senha deve ter pelo menos 6 caracteres.`;
+  (g) `Este e-mail já está cadastrado.`. The user count is unchanged after all seven.
 
 ### F01-C3 — Signup cannot create an organizer
 
@@ -52,9 +55,11 @@ The evaluator exercises **only** what is written here, against the given commit,
 ### F01-C6 — Logout ends the session server-side
 
 - **Steps**: log in as org A with `jar6`; copy the cookie file to `jar6-old`; `curl -s -i -b jar6 -c jar6 -X POST "$WEB/logout"`;
-  then `curl -s -i -b jar6-old "$WEB/organizer/events"`.
+  then `curl -s -i -b jar6-old "$WEB/organizer/events"`; then, with `T` = the raw `catraca_session` value
+  from `jar6-old`:
+  `docker compose exec -T db psql -U catraca -tAc "select count(*) from sessions where id = encode(sha256('$T'::bytea), 'hex')"`.
 - **Expected**: logout answers `303` `Location: /` and expires the cookie; replaying the **old** cookie gets
-  `303` `Location: /login` (the session row is gone, not only the cookie).
+  `303` `Location: /login`; the query returns `0` (the session row was deleted, not only the cookie).
 
 ### F01-C7 — Organizer area is closed to visitors and participants
 
@@ -65,13 +70,14 @@ The evaluator exercises **only** what is written here, against the given commit,
 
 ### F01-C8 — No plain-text secrets in the database
 
-- **Steps**:
+- **Steps** (`T` = raw `catraca_session` value from `jar1`, i.e. a session still logged in):
   ```sh
-  docker compose exec -T db psql -U catraca -tAc "select password_hash from users where email='$NEW'"
-  docker compose exec -T db psql -U catraca -tAc "select count(*) from sessions where id = '<raw value of catraca_session from jar1>'"
+  docker compose exec -T db psql -U catraca -tAc "select email, password_hash from users where email in ('$NEW','org.a@catraca.test','org.b@catraca.test','participante@catraca.test')"
+  docker compose exec -T db psql -U catraca -tAc "select count(*) from sessions where id = '$T'"
+  docker compose exec -T db psql -U catraca -tAc "select count(*) from sessions where id = encode(sha256('$T'::bytea), 'hex')"
   ```
-- **Expected**: the hash starts with `scrypt:` and does not contain `segredo1`; the session count is `0`
-  (only the sha256 of the token is stored).
+- **Expected**: all four hashes start with `scrypt:` and none contains `segredo1` or `catraca123`; the
+  raw-token query returns `0` and the sha256 query returns `1` (the session is stored only as sha256 of the token).
 
 ### F01-C-GATES — Gates pass
 
