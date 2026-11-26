@@ -73,8 +73,9 @@
 ### F02-C7 — Price edits and capacity increases are accepted (R03)
 
 - **Steps**: as A, POST edit to `$EVT` with the same fields but `price=150,00` and `capacity=3`; load the
-  management page and the public event page.
-- **Expected**: `303`; both pages show `R$ 150,00`; the management page shows capacity `3`;
+  management page, the public event page and the storefront `/` (as a visitor).
+- **Expected**: `303`; all three pages show `R$ 150,00` and the storefront no longer shows `R$ 100,00` for this
+  event; the management page shows capacity `3`;
   `select capacity, price_cents from events where id='$EVT'` returns `3|15000`.
 
 ### F02-C8 — X-F01-F02-1: visitors and participants cannot reach a real organizer event (R13)
