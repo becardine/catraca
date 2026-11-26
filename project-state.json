@@ -58,13 +58,13 @@
       "id": "F03",
       "name": "Ticket purchase and simulated gateway",
       "wave": 3,
-      "status": "in_evaluation",
+      "status": "done",
       "dir": "docs/features/F03-purchase",
       "branch": "feat/F03-purchase",
-      "pr": null,
+      "pr": "https://github.com/becardine/catraca/pull/5",
       "implementedBy": "claude-code (claude-opus-5-5)",
-      "evaluatedBy": null,
-      "latestReport": null
+      "evaluatedBy": "codex (Codex CLI, gpt-6)",
+      "latestReport": "docs/features/F03-purchase/reports/20261126-0129-evaluation.md"
     },
     {
       "id": "F04",
