@@ -63,7 +63,7 @@ A seed roda a cada subida e é idempotente.
 | Templates | [`docs/templates/`](docs/templates/) |
 | Arquivo de estado | [`project-state.json`](project-state.json) |
 | Porta de entrada dos agentes | [`AGENTS.md`](AGENTS.md) (o [`CLAUDE.md`](CLAUDE.md) aponta para ele) |
-| PRs da wave paralela | *(a preencher)* |
+| PRs da wave paralela (wave 4) | [#6 F04](https://github.com/becardine/catraca/pull/6), [#7 F05](https://github.com/becardine/catraca/pull/7), [#8 F06](https://github.com/becardine/catraca/pull/8) |
 
 ## Decisões
 
