@@ -3,6 +3,7 @@ import { registerAuth } from "./auth/plugin.js";
 import type { Config } from "./config.js";
 import type { Pool } from "./db/pool.js";
 import { createEventsRegistry, type EventsRegistry, registerEvents } from "./events/index.js";
+import { registerPartnerApi } from "./partner-api/index.js";
 import { registerTickets } from "./tickets/index.js";
 import { html } from "./ui/html.js";
 import { renderPage, sendPage } from "./ui/layout.js";
@@ -38,6 +39,8 @@ export async function buildApp({ config, pool }: AppDeps): Promise<FastifyInstan
   registerEvents(app, deps);
   // F03 — purchase, gateway results, "Meus ingressos" (gateway worker starts in main.ts).
   registerTickets(app, deps);
+  // F04 — partner API under /api/partner (own key hook, error and 404 handlers).
+  await registerPartnerApi(app, deps);
 
   app.setNotFoundHandler((request, reply) =>
     sendPage(
