@@ -46,11 +46,11 @@
       "id": "F02",
       "name": "Event management and storefront listing",
       "wave": 2,
-      "status": "planned",
+      "status": "in_evaluation",
       "dir": "docs/features/F02-events",
       "branch": "feat/F02-events",
       "pr": null,
-      "implementedBy": null,
+      "implementedBy": "claude-code (claude-opus-5-5)",
       "evaluatedBy": null,
       "latestReport": null
     },

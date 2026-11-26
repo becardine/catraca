@@ -3,7 +3,7 @@ import { buildApp } from "../../src/app.js";
 import { SESSION_COOKIE } from "../../src/auth/sessions.js";
 import { loadConfig } from "../../src/config.js";
 import type { Pool } from "../../src/db/pool.js";
-import { runSeed } from "../../src/db/seed.js";
+import { runSeed, SEED_USERS } from "../../src/db/seed.js";
 import { randomToken } from "../../src/lib/ids.js";
 import { setupTestDb } from "./db.js";
 
@@ -49,7 +49,7 @@ export function sessionCookie(res: LightMyRequestResponse): string | undefined {
 }
 
 /** Logs in and returns a Cookie header value for later requests. */
-export async function login(app: FastifyInstance, email: string, password = "catraca123") {
+export async function login(app: FastifyInstance, email: string, password = SEED_PASSWORD) {
   const res = await app.inject({ method: "POST", url: "/login", ...form({ email, password }) });
   const token = sessionCookie(res);
   if (!token) throw new Error(`login failed for ${email}: ${res.statusCode}`);
@@ -61,3 +61,9 @@ export const SEED = {
   orgB: "org.b@catraca.test",
   participant: "participante@catraca.test",
 } as const;
+
+/** Seed password read from the seed itself (no literal secrets in tests). */
+export const SEED_PASSWORD = SEED_USERS[0]?.password ?? "";
+
+/** Random password for accounts created during a test run. */
+export const NEW_PASSWORD = `pw-${randomToken(12)}`;
