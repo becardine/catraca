@@ -106,11 +106,11 @@
       "id": "F07",
       "name": "Event cancellation",
       "wave": 5,
-      "status": "planned",
+      "status": "in_evaluation",
       "dir": "docs/features/F07-cancellation",
       "branch": "feat/F07-cancellation",
       "pr": null,
-      "implementedBy": null,
+      "implementedBy": "claude-code (claude-opus-5-5)",
       "evaluatedBy": null,
       "latestReport": null
     }

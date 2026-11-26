@@ -6,6 +6,7 @@ export const NOTICES: Record<string, string> = {
   created: "Evento criado como rascunho.",
   updated: "Evento atualizado.",
   published: "Evento publicado.",
+  cancelled: "Evento cancelado.",
 };
 
 export type FormValues = Record<string, string>;
