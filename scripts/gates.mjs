@@ -7,7 +7,9 @@ import { join } from "node:path";
 import { ROOT, requireDocker, run, runOrExit } from "./lib.mjs";
 
 const GATES_DB_PORT = process.env.GATES_DB_PORT ?? "55433";
-const compose = ["compose", "-f", "docker-compose.gates.yml"];
+// GATES_PROJECT lets parallel worktrees run gates at the same time (each with its own GATES_DB_PORT).
+const GATES_PROJECT = process.env.GATES_PROJECT ?? "catraca-gates";
+const compose = ["compose", "-p", GATES_PROJECT, "-f", "docker-compose.gates.yml"];
 const steps = [];
 
 function step(name, fn) {
