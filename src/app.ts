@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerAuth } from "./auth/plugin.js";
+import { registerCheckin } from "./checkin/index.js";
 import type { Config } from "./config.js";
 import type { Pool } from "./db/pool.js";
 import { createEventsRegistry, type EventsRegistry, registerEvents } from "./events/index.js";
@@ -38,6 +39,7 @@ export async function buildApp({ config, pool }: AppDeps): Promise<FastifyInstan
   registerEvents(app, deps);
   // F03 — purchase, gateway results, "Meus ingressos" (gateway worker starts in main.ts).
   registerTickets(app, deps);
+  registerCheckin(app, deps);
 
   app.setNotFoundHandler((request, reply) =>
     sendPage(
