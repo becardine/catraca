@@ -70,13 +70,13 @@
       "id": "F04",
       "name": "Partner API",
       "wave": 4,
-      "status": "planned",
+      "status": "done",
       "dir": "docs/features/F04-partner-api",
       "branch": "feat/F04-partner-api",
       "pr": null,
-      "implementedBy": null,
-      "evaluatedBy": null,
-      "latestReport": null
+      "implementedBy": "claude-code (claude-opus-5-5)",
+      "evaluatedBy": "codex (Codex CLI, gpt-6)",
+      "latestReport": "docs/features/F04-partner-api/reports/20261126-2053-evaluation.md"
     },
     {
       "id": "F05",
