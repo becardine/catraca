@@ -91,12 +91,36 @@ Two agent tools are used on this project (Claude Code and Codex). Every artifact
   Agent-Role: implementer | evaluator | author
   ```
   `author` = PRD/spec/plan/contract/docs work. Commits made by the human have no trailers.
+  Right after them, add the tool's GitHub co-author line (it renders the tool's avatar on GitHub):
+  - Claude Code: `Co-Authored-By: Claude <noreply@anthropic.com>`
+  - Codex: `Co-authored-by: Codex <noreply@openai.com>`
+
+  Full example (Codex implementing):
+  ```
+  test: cover ID and token generation
+
+  Agent-Tool: codex
+  Agent-Model: gpt-6
+  Agent-Role: implementer
+  Co-authored-by: Codex <noreply@openai.com>
+  ```
+  The `Agent-*` trailers are the source of truth for attribution; the co-author line is a visual aid.
   List them with: `git log --format='%h %s | %(trailers:key=Agent-Tool,valueonly,separator=%x2C)'`
 - **Evaluation reports**: fill `Implemented by` (tool + model of the implementation commits) and the
   evaluator's own `Tool` / `Model`. The evaluator should be a different tool than the implementer
   whenever possible; it must always be a different session with empty context.
 - **`project-state.json`**: each feature records `implementedBy` and `evaluatedBy` (see format below).
 - **PR description**: states the implementing tool + model and links the latest evaluation report.
+
+### Pull requests and merging
+
+- The **implementer opens the PR** with `gh pr create` from its branch to `main`. Title in
+  Conventional Commits style (e.g. `feat(F03): storefront purchase`). Description: what changed,
+  implementing tool + model, gates result, link to the latest evaluation report (or "pending evaluation").
+- **Agents never merge** PRs (no `gh pr merge`, no push to `main`). **The human merges** after the
+  latest evaluation report approves every contract item.
+- The **evaluator never opens or merges PRs**; it only commits its report (see Workflow step 4).
+- Do not push unless the task asks for it (`git push -u origin <branch>` is part of opening a PR).
 
 ### `project-state.json` feature format
 
