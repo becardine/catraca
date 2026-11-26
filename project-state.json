@@ -34,13 +34,13 @@
       "id": "F01",
       "name": "Accounts and access",
       "wave": 1,
-      "status": "in_evaluation",
+      "status": "done",
       "dir": "docs/features/F01-accounts",
       "branch": "feat/F01-accounts",
       "pr": null,
       "implementedBy": "claude-code (claude-opus-5-5)",
-      "evaluatedBy": null,
-      "latestReport": null
+      "evaluatedBy": "codex (Codex CLI, gpt-6)",
+      "latestReport": "docs/features/F01-accounts/reports/20261126-0048-evaluation.md"
     },
     {
       "id": "F02",
